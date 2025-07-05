@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ToDo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Optional: Strikethrough styling -->
+    <style>
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4">ToDo List</h2>
+
+        <!-- Form to add new task -->
+        <form th:action="@{/add}" method="post" class="row g-2 mb-4">
+            <div class="col-10">
+                <input type="text" name="name" class="form-control" placeholder="Enter task..." required />
+            </div>
+            <div class="col-2">
+                <button type="submit" class="btn btn-primary w-100">Add Task</button>
+            </div>
+        </form>
+
+        <!-- Task List -->
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                th:each="task : ${tasks}">
+                <form th:action="@{/toggle/{id}(id=${task.id})}" method="post"
+                      class="d-flex align-items-center flex-grow-1">
+                    <input type="checkbox" name="completed"
+                           th:checked="${task.completed}" onchange="this.form.submit()"
+                           class="form-check-input me-2" />
+                    <span th:text="${task.name}"
+                          th:classappend="${task.completed} ? 'completed' : ''"></span>
+                </form>
+                <a th:href="@{/delete/{id}(id=${task.id})}" class="text-danger text-decoration-none">Delete</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
