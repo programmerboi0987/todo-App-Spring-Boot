@@ -52,10 +52,10 @@
             <div class="col-md-2 offset-md-10">
                 <select name="sortBy" class="form-select" onchange="this.form.submit()">
                     <option value="">Sort by</option>
-                    <option value="dueDateAsc" th:selected="${sortBy} == 'dueDateAsc'">Due Date ↑</option>
-                    <option value="dueDateDesc" th:selected="${sortBy} == 'dueDateDesc'">Due Date ↓</option>
-                    <option value="priorityAsc" th:selected="${sortBy} == 'priorityAsc'">Priority ↑</option>
-                    <option value="priorityDesc" th:selected="${sortBy} == 'priorityDesc'">Priority ↓</option>
+                    <option value="dueDateAsc" th:selected="${sortBy} == 'dueDateAsc'">Due Date (Soonest First)</option>
+                    <option value="dueDateDesc" th:selected="${sortBy} == 'dueDateDesc'">Due Date (Latest First)</option>
+                    <option value="priorityAsc" th:selected="${sortBy} == 'priorityAsc'">Priority (Low to High)</option>
+                    <option value="priorityDesc" th:selected="${sortBy} == 'priorityDesc'">Priority (High to Low)</option>
                     <option value="completedFirst" th:selected="${sortBy} == 'completedFirst'">Completed First</option>
                     <option value="incompleteFirst" th:selected="${sortBy} == 'incompleteFirst'">Incomplete First</option>
                 </select>
