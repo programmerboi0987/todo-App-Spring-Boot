@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ToDo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Optional: Strikethrough styling -->
+    <style>
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4">ToDo List</h2>
+
+        <!-- Form to add new task -->
+        <form th:action="@{/add}" method="post" class="row g-2 mb-4 align-items-center">
+            <!-- Task title textbox -->
+            <div class="col-md-6">
+                <input type="text" name="name" class="form-control" placeholder="Enter task..." required />
+            </div>
+            <!-- Priority Dropdown -->
+            <div class="col-md-2">
+                <select name="priority" class="form-select">
+                    <option value="" selected>Priority</option>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                </select>
+            </div>
+            <!-- Due Date (date selector) -->
+            <div class="col-md-2">
+                <input type="date" name="dueDate" class="form-control" />
+            </div>
+            <!-- Add task button -->
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Add</button>
+            </div>
+        </form>
+
+        <!-- Form to sort (GET) -->
+        <form method="get" action="/" class="row mb-4">
+            <div class="col-md-2 offset-md-10">
+                <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                    <option value="">Sort by</option>
+                    <option value="dueDateAsc" th:selected="${sortBy} == 'dueDateAsc'">Due Date ↑</option>
+                    <option value="dueDateDesc" th:selected="${sortBy} == 'dueDateDesc'">Due Date ↓</option>
+                    <option value="priorityAsc" th:selected="${sortBy} == 'priorityAsc'">Priority ↑</option>
+                    <option value="priorityDesc" th:selected="${sortBy} == 'priorityDesc'">Priority ↓</option>
+                    <option value="completedFirst" th:selected="${sortBy} == 'completedFirst'">Completed First</option>
+                    <option value="incompleteFirst" th:selected="${sortBy} == 'incompleteFirst'">Incomplete First</option>
+                </select>
+            </div>
+        </form>
+
+        <!-- Task List -->
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                th:each="task : ${tasks}">
+                <form th:action="@{/toggle/{id}(id=${task.id})}" method="post"
+                      class="d-flex align-items-center flex-grow-1">
+                    <!-- Complete/Incomplete checkbox -->
+                    <input type="checkbox" name="completed"
+                           th:checked="${task.completed}" onchange="this.form.submit()"
+                           class="form-check-input mt-1 me-3 flex-shrink-0"
+                           style="width: 1.2rem; height: 1.2rem;" />
+                    <div>
+                        <div class="d-flex align-items-center">
+                            <!-- Task Title -->
+                            <span th:text="${task.name}"
+                                  th:classappend="${task.completed} ? 'completed' : ''"
+                                  class="text-wrap text-break d-block"></span>
+                        </div>
+                        <!-- Due Date -->
+                        <div th:if="${task.dueDate != null}" class="text-muted small">
+                            Due: <span th:text="${task.dueDate}"></span>
+                        </div>
+                        <!-- Priority Name -->
+                        <div th:if="${task.priority != null}" class="text-muted small">
+                            Priority: <span th:text="${task.priority.name()}"></span>
+                        </div>
+                    </div>
+                </form>
+                <div class="d-flex align-items-center">
+                    <!-- Edit button -->
+                    <a th:href="@{/edit/{id}(id=${task.id})}" class="text-primary text-decoration-none me-3">Edit</a>
+                    <!-- Delete button -->
+                    <a th:href="@{/delete/{id}(id=${task.id})}" class="text-danger text-decoration-none">Delete</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
