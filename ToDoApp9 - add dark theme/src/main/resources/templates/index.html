@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ToDo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+            crossorigin="anonymous"></script>
+
+    <!-- Optional: Strikethrough styling -->
+    <style>
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        body.dark-mode {
+            background-color: #121212 !important;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .card {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .list-group-item {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #ddd;
+        }
+
+        .dark-mode .form-control,
+        .dark-mode .form-select {
+            background-color: #2c2c2c;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .dark-mode .btn-outline-dark {
+            color: #f8f9fa;
+            border-color: #ccc;
+        }
+
+        .dark-mode .btn-outline-dark:hover {
+            background-color: #333;
+            border-color: #fff;
+        }
+
+        .dark-mode input::placeholder,
+        .dark-mode textarea::placeholder,
+        .dark-mode .form-control::placeholder {
+            color: #ccc;
+            opacity: 1;
+        }
+
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        input, select, textarea {
+            transition: background-color 0.3s, color 0.3s;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-end mb-3">
+        <button id="themeToggle" class="btn btn-outline-dark btn-sm">🌙 Dark Mode</button>
+    </div>
+
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4">ToDo List</h2>
+
+        <!-- Form to add new task -->
+        <form th:action="@{/add}" method="post" class="row g-2 mb-4 align-items-center">
+            <!-- Task title textbox -->
+            <div class="col-md-6">
+                <input type="text" name="name" class="form-control" placeholder="Enter task..." required />
+            </div>
+            <!-- Due Date (date selector) -->
+            <div class="col-md-2">
+                <input type="date" name="dueDate" class="form-control" />
+            </div>
+            <!-- Priority Dropdown -->
+            <div class="col-md-2">
+                <select name="priority" class="form-select">
+                    <option value="" selected>Priority</option>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                </select>
+            </div>
+            <!-- Add task button -->
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Add</button>
+            </div>
+        </form>
+
+        <!-- Sort and Filter Controls -->
+        <div class="d-flex justify-content-end mb-3 gap-2">
+            <!-- Sort Dropdown -->
+            <form method="get" action="/" class="d-inline">
+                <select name="sortBy" class="form-select" onchange="this.form.submit()">
+                    <option value="">Sort by</option>
+                    <option value="dueDateAsc" th:selected="${sortBy} == 'dueDateAsc'">Due Date (Soonest First)</option>
+                    <option value="dueDateDesc" th:selected="${sortBy} == 'dueDateDesc'">Due Date (Latest First)</option>
+                    <option value="priorityAsc" th:selected="${sortBy} == 'priorityAsc'">Priority (Low to High)</option>
+                    <option value="priorityDesc" th:selected="${sortBy} == 'priorityDesc'">Priority (High to Low)</option>
+                    <option value="completedFirst" th:selected="${sortBy} == 'completedFirst'">Show Completed First</option>
+                    <option value="incompleteFirst" th:selected="${sortBy} == 'incompleteFirst'">Show Incomplete First</option>
+                </select>
+            </form>
+
+            <!-- Filter Button (opens modal) -->
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                Filters
+            </button>
+        </div>
+
+        <!-- Task List -->
+        <ul class="list-group">
+
+            <!-- Header Row -->
+            <li class="list-group-item d-flex fw-bold text-secondary bg-light">
+                <div class="me-3" style="width: 1.5rem;"></div> <!-- Checkbox space -->
+                <div class="flex-grow-1">Title</div>
+                <div class="me-4 text-nowrap" style="min-width: 120px;">Due Date</div>
+                <div class="me-4 text-nowrap" style="min-width: 100px;">Priority</div>
+                <div class="me-3 text-nowrap" style="min-width: 30px;">Edit</div>
+                <div class="text-nowrap" style="min-width: 40px;">Delete</div>
+            </li>
+
+            <p th:if="${#lists.isEmpty(tasks)}" class="text-muted">No tasks found</p> <!-- For debugging -->
+
+            <!-- Task Rows -->
+            <li class="list-group-item d-flex align-items-center"
+                th:each="task : ${tasks}">
+
+                <!-- Checkbox (inside its own form) -->
+                <form th:action="@{/toggle/{id}(id=${task.id})}" method="post" class="me-3">
+                    <input type="checkbox" name="completed"
+                           th:checked="${task.completed}" onchange="this.form.submit()"
+                           class="form-check-input mt-1"
+                           style="width: 1.2rem; height: 1.2rem;" />
+                </form>
+
+                <!-- Task Title -->
+                <div class="flex-grow-1 text-wrap text-break">
+        <span th:text="${task.name}"
+              th:classappend="${task.completed} ? 'completed' : ''"></span>
+                </div>
+
+                <!-- Due Date -->
+                <div class="text-nowrap me-4" style="min-width: 120px;">
+                    <span th:text="${task.dueDate != null} ? ${task.dueDate} : '-'"></span>
+                </div>
+
+                <!-- Priority -->
+                <div class="text-nowrap me-4" style="min-width: 100px;">
+                    <span th:text="${task.priority != null} ? ${task.priority.name()} : '-'"></span>
+                </div>
+
+                <!-- Edit/Delete -->
+                <div class="text-nowrap">
+                    <a th:href="@{/edit/{id}(id=${task.id})}" class="text-primary text-decoration-none me-3">Edit</a>
+                    <a th:href="@{/delete/{id}(id=${task.id})}" class="text-danger text-decoration-none">Delete</a>
+                </div>
+            </li>
+
+        </ul>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <form method="get" action="/" class="modal-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Tasks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body row g-3">
+                    <!-- Completion Status -->
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Completion Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">All</option>
+                            <option value="complete" th:selected="${status} == 'complete'">Completed</option>
+                            <option value="incomplete" th:selected="${status} == 'incomplete'">Incomplete</option>
+                        </select>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="col-md-6">
+                        <label for="priorityFilter" class="form-label">Priority</label>
+                        <select name="priorityFilter" id="priorityFilter" class="form-select">
+                            <option value="">All</option>
+                            <option value="LOW" th:selected="${priorityFilter} == 'LOW'">Low</option>
+                            <option value="MEDIUM" th:selected="${priorityFilter} == 'MEDIUM'">Medium</option>
+                            <option value="HIGH" th:selected="${priorityFilter} == 'HIGH'">High</option>
+                        </select>
+                    </div>
+
+                    <!-- Due Date After -->
+                    <div class="col-md-6">
+                        <label for="dueAfter" class="form-label">Due Date After</label>
+                        <input type="date" name="dueAfter" id="dueAfter" class="form-control"
+                               th:value="${dueAfter}" />
+                    </div>
+
+                    <!-- Due Date Before -->
+                    <div class="col-md-6">
+                        <label for="dueBefore" class="form-label">Due Date Before</label>
+                        <input type="date" name="dueBefore" id="dueBefore" class="form-control"
+                               th:value="${dueBefore}" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="/" class="btn btn-secondary">Clear Filters</a>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<script>
+    const toggleBtn = document.getElementById("themeToggle");
+    const currentTheme = localStorage.getItem("theme");
+
+    if (currentTheme === "dark") {
+        document.body.classList.add("dark-mode");
+        toggleBtn.textContent = "☀️ Light Mode";
+    }
+
+    toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+
+        if (document.body.classList.contains("dark-mode")) {
+            localStorage.setItem("theme", "dark");
+            toggleBtn.textContent = "☀️ Light Mode";
+        } else {
+            localStorage.setItem("theme", "light");
+            toggleBtn.textContent = "🌙 Dark Mode";
+        }
+    });
+</script>
+</body>
+</html>
